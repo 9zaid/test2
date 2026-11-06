@@ -26,11 +26,11 @@ jobs:
       # Groq through its OpenAI-compatible endpoint: langchain-groq sends JSON mode together
       # with tool calling, which Groq rejects (400), so every LLM batch failed. cisco-aibom
       # strips a leading "openai/" when the provider is openai, hence the doubled prefix:
-      # Groq receives "openai/gpt-oss-120b".
+      # Groq receives "qwen/qwen3.6-27b" (gpt-oss on Groq fails the agentic tool calls with 400 tool_use_failed).
       AIBOM_LLM_PROVIDER: openai
       AIBOM_LLM_API_BASE: https://api.groq.com/openai/v1
-      AIBOM_LLM_MODEL: openai/openai/gpt-oss-120b
-      AIBOM_FAST_MODEL: openai/openai/gpt-oss-20b
+      AIBOM_LLM_MODEL: openai/qwen/qwen3.6-27b
+      AIBOM_FAST_MODEL: openai/qwen/qwen3.6-27b
       GRYPE_VERSION: v0.112.0
       SYFT_VERSION: v1.50.0
       SEMGREP_VERSION: 1.182.1
