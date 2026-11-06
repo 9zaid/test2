@@ -3765,6 +3765,24 @@ jobs:
                   return None
 
 
+          DOCUMENT_EXT = (".xlsx", ".xls", ".docx", ".doc", ".pptx", ".pdf", ".zip", ".jar", ".gz", ".tar", ".png", ".jpg")
+
+
+          def _rate_secrets(components):
+              """Unverified secrets get a confidence: two detectors agreeing -> high, one -> medium, one
+              detector inside a document/archive (decoded binary content, pattern-only) -> low."""
+              for comp in components:
+                  if comp.get("_source") not in ("gitleaks", "trufflehog"):
+                      continue
+                  props = {p.get("name"): p.get("value") for p in comp.get("properties") or []}
+                  if "cytex:confidence" in props:
+                      continue
+                  both = bool(props.get("secret:AlsoDetectedBy"))
+                  in_doc = str(props.get("cisco-aibom:file") or "").lower().endswith(DOCUMENT_EXT)
+                  level = "high" if both else ("low" if in_doc else "medium")
+                  comp.setdefault("properties", []).append({"name": "cytex:confidence", "value": level})
+
+
           def merge_extra(combined, report_dir, semgrep_doc, scan_dir):
               """Add semgrep-AI, TruffleHog and ModelScan results to `combined` in place.
               Returns (tool statuses, counts) for cytexScan."""
@@ -3803,6 +3821,7 @@ jobs:
               except Exception as error:
                   print("modelscan merge skipped: %s: %s" % (type(error).__name__, error))
 
+              _rate_secrets(components)
               tools = {"semgrepAi": "0" if "semgrepAiComponents" in counts else "",
                        "trufflehog": str(status.get("trufflehog", "")), "modelscan": str(status.get("modelscan", ""))}
               return tools, counts
